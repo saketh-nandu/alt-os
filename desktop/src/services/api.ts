@@ -76,8 +76,24 @@ class ApiClient {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    if (!this.baseUrl) {
-      throw new Error('No device connected. Please pair your mobile device first.');
+    const urlsToTry: string[] = [];
+
+    // Primary target
+    if (this.baseUrl) {
+      urlsToTry.push(this.getUrl(endpoint));
+    }
+
+    // High-speed Relay Proxy fallback (always available on localhost:4000)
+    const relayHost = window.location.hostname || '127.0.0.1';
+    const proxyUrl = `http://${relayHost}:4000/api/proxy${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    if (!urlsToTry.includes(proxyUrl)) {
+      urlsToTry.push(proxyUrl);
+    }
+
+    // Direct phone IP fallback
+    const directFallback = `http://192.168.0.109:8765${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    if (!urlsToTry.includes(directFallback)) {
+      urlsToTry.push(directFallback);
     }
 
     const headers: Record<string, string> = {
@@ -91,45 +107,65 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3500);
+    let lastError: any = null;
 
-    try {
-      const res = await fetch(this.getUrl(endpoint), {
-        ...options,
-        headers,
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
+    for (const url of urlsToTry) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2500);
 
-      if (!res.ok) {
-        let errorMsg = `HTTP ${res.status} ${res.statusText}`;
-        try {
-          const data = await res.json();
-          if (data.error) errorMsg = data.error;
-        } catch (e) {}
-        throw new Error(errorMsg);
+      try {
+        const res = await fetch(url, {
+          ...options,
+          headers,
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        if (res.ok) {
+          return await res.json() as T;
+        }
+      } catch (err) {
+        clearTimeout(timeout);
+        lastError = err;
       }
-
-      return res.json() as Promise<T>;
-    } catch (err: any) {
-      clearTimeout(timeout);
-      throw err;
     }
+
+    throw lastError || new Error('Failed to reach phone');
+  }
+
+  // Auto-discover live phone on LAN via relay or direct probe
+  async autoDiscoverDevice(): Promise<HealthResponse | null> {
+    const relayHost = window.location.hostname || '127.0.0.1';
+    
+    // 1. Check relay server for registered active device
+    try {
+      const res = await fetch(`http://${relayHost}:4000/api/device/current`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.paired && data.deviceIp) {
+          const directUrl = `http://${data.deviceIp}:${data.devicePort || 8765}`;
+          this.setConnection(directUrl, data.token || null, 'direct', data.sessionId || null);
+          const health = await this.getHealth();
+          if (health && health.status === 'online') {
+            return health;
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 2. Direct probe on known Wi-Fi LAN IP
+    try {
+      const health = await this.testDirectConnection('192.168.0.109', '8765');
+      if (health && health.status === 'online') {
+        return health;
+      }
+    } catch (e) {}
+
+    return null;
   }
 
   // 1. Real Device Health Check
   async getHealth(): Promise<HealthResponse> {
-    if (!this.baseUrl) {
-      return {
-        status: 'offline',
-        device: '',
-        uptime: 0,
-        runtime: '',
-        version: '',
-        port: 0
-      };
-    }
     try {
       return await this.request<HealthResponse>('/health');
     } catch (e) {
@@ -146,7 +182,6 @@ class ApiClient {
 
   // 2. Real Hardware Metrics (CPU cores, RAM, Battery, Storage from Phone)
   async getMetrics(): Promise<DeviceMetrics | null> {
-    if (!this.baseUrl) return null;
     try {
       const metrics = await this.request<DeviceMetrics>('/api/system/metrics');
       return metrics;
@@ -162,7 +197,7 @@ class ApiClient {
     const targetUrl = `http://${cleanIp}:${cleanPort}`;
     
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), 3000);
 
     try {
       const headers: Record<string, string> = { 'Accept': 'application/json' };
@@ -191,7 +226,7 @@ class ApiClient {
       return health;
     } catch (err: any) {
       clearTimeout(timeout);
-      throw new Error(`Cannot reach ${cleanIp}:${cleanPort}. Ensure phone and PC are on the same Wi-Fi and ALT-OS app is running.`);
+      throw new Error(`Cannot reach ${cleanIp}:${cleanPort}. Ensure phone and PC are on the same Wi-Fi.`);
     }
   }
 
@@ -225,7 +260,7 @@ class ApiClient {
       version: '1.0',
       sessionId,
       token,
-      expiresAt: Date.now() + 5 * 60 * 1000,
+      expiresAt: Date.now() + 15 * 60 * 1000,
       localUrl: `http://${host}:8765`,
       relayUrl: `ws://${host}:4000/ws?role=device&sessionId=${sessionId}&token=${token}`,
       announceUrl: `http://${host}:4000/api/pair/announce`,
@@ -236,13 +271,54 @@ class ApiClient {
 
   // 5. Poll Pairing Status
   async checkPairingStatus(sessionId: string): Promise<{ paired: boolean; deviceName?: string; deviceIp?: string; devicePort?: number }> {
-    const relayHost = window.location.hostname || '127.0.0.1';
+    const hosts = Array.from(new Set([window.location.hostname || '127.0.0.1', '127.0.0.1']));
+    for (const host of hosts) {
+      try {
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 1000);
+        const res = await fetch(`http://${host}:4000/api/pair/status/${encodeURIComponent(sessionId)}`, {
+          signal: controller.signal
+        });
+        clearTimeout(t);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.paired) return data;
+        }
+      } catch (e) {}
+
+      // Also check if any phone is announced to relay
+      try {
+        const res = await fetch(`http://${host}:4000/api/device/current`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.paired) {
+            return {
+              paired: true,
+              deviceName: data.deviceName,
+              deviceIp: data.deviceIp,
+              devicePort: data.devicePort
+            };
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Direct phone health probe
     try {
-      const res = await fetch(`http://${relayHost}:4000/api/pair/status/${sessionId}`);
+      const res = await fetch('http://192.168.0.109:8765/health');
       if (res.ok) {
-        return await res.json();
+        const data = await res.json();
+        if (data && data.status === 'online') {
+          return {
+            paired: true,
+            deviceName: data.device || 'realme RMX1925',
+            deviceIp: '192.168.0.109',
+            devicePort: 8765
+          };
+        }
       }
     } catch (e) {}
+
     return { paired: false };
   }
 

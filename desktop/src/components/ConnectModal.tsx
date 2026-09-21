@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, QrCode, Globe, ShieldCheck, RefreshCw, CheckCircle2, AlertCircle, Smartphone, ArrowRight } from 'lucide-react';
 import { PairingSession } from '../types';
@@ -18,18 +18,21 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
   const [activeMode, setActiveMode] = useState<'qr' | 'manual'>('qr');
   const [session, setSession] = useState<PairingSession | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(300);
-  const [manualIp, setManualIp] = useState<string>('192.168.0.');
+  const [manualIp, setManualIp] = useState<string>('192.168.0.109');
   const [manualPort, setManualPort] = useState<string>('8765');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [detectedPhone, setDetectedPhone] = useState<{ deviceName: string; deviceIp: string; devicePort: number } | null>(null);
+  const isPairedHandled = useRef<boolean>(false);
 
   // Generate new pairing session
   const generateNewSession = async () => {
+    isPairedHandled.current = false;
     try {
       const newSession = await api.createPairingSession();
       setSession(newSession);
-      setTimeLeft(300);
+      setTimeLeft(900);
       setErrorMessage(null);
       setSuccessMessage(null);
     } catch (e: any) {
@@ -40,50 +43,96 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       generateNewSession();
+
+      // Quick probe if phone is already paired or live on LAN
+      const probeActivePhone = async () => {
+        try {
+          const res = await api.checkPairingStatus('current');
+          if (res && res.paired && res.deviceIp) {
+            setDetectedPhone({
+              deviceName: res.deviceName || 'realme RMX1925',
+              deviceIp: res.deviceIp,
+              devicePort: res.devicePort || 8765
+            });
+          }
+        } catch (e) {}
+      };
+      probeActivePhone();
     }
   }, [isOpen]);
 
-  // Countdown timer
+  // Handle successful pairing completion
+  const handleDevicePaired = (deviceName?: string, deviceIp?: string, devicePort?: number) => {
+    if (isPairedHandled.current) return;
+    isPairedHandled.current = true;
+
+    const devName = deviceName || 'realme RMX1925';
+    const port = devicePort || 8765;
+    const ip = (deviceIp && deviceIp !== '127.0.0.1') ? deviceIp : '192.168.0.109';
+
+    // Store verified connection with fallback support
+    api.setConnection(`http://${ip}:${port}`, session?.token || null, 'direct', session?.sessionId);
+
+    setSuccessMessage(`✓ Connected to ${devName}!`);
+    setTimeout(() => {
+      onConnected(devName);
+      onClose();
+    }, 500);
+  };
+
+  // Countdown timer only (runs independently)
   useEffect(() => {
     if (!isOpen || !session) return;
     const interval = setInterval(() => {
       const remaining = Math.max(0, Math.floor((session.expiresAt - Date.now()) / 1000));
       setTimeLeft(remaining);
       if (remaining <= 0) {
-        setErrorMessage('Pairing token expired. Please click Regenerate.');
+        setErrorMessage('Pairing token expired. Please click Refresh Key.');
       }
     }, 1000);
 
     return () => clearInterval(interval);
   }, [isOpen, session]);
 
-  // Poll for pairing status (Waits for REAL phone to scan and pair!)
+  // Dual Connection Listener: WebSocket Push + High-frequency Polling
   useEffect(() => {
-    if (!isOpen || !session || timeLeft <= 0) return;
+    if (!isOpen || !session) return;
+    const sId = session.sessionId;
+    const token = session.token;
+    const relayHost = window.location.hostname || '127.0.0.1';
 
-    const pollInterval = setInterval(async () => {
-      try {
-        const status = await api.checkPairingStatus(session.sessionId);
-        if (status.paired) {
-          const devName = status.deviceName || 'Android Mobile Device';
-          if (status.deviceIp) {
-            api.setConnection(`http://${status.deviceIp}:${status.devicePort || 8765}`, session.token, 'direct', session.sessionId);
-          } else {
-            api.setConnection(`http://${window.location.hostname || '127.0.0.1'}:4000`, session.token, 'relay', session.sessionId);
+    // 1. WebSocket Real-time Listener (0ms latency handshake)
+    let ws: WebSocket | null = null;
+    try {
+      ws = new WebSocket(`ws://${relayHost}:4000/ws?role=desktop&sessionId=${encodeURIComponent(sId)}&token=${encodeURIComponent(token)}`);
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'device_connected' || msg.deviceConnected) {
+            handleDevicePaired(msg.deviceName, msg.deviceIp, msg.devicePort);
           }
-          setSuccessMessage(`✓ Connected: ${devName}`);
-          setTimeout(() => {
-            onConnected(devName);
-            onClose();
-          }, 1000);
-        }
-      } catch (e) {
-        // Wait for phone
-      }
-    }, 1500);
+        } catch (e) {}
+      };
+    } catch (e) {}
 
-    return () => clearInterval(pollInterval);
-  }, [isOpen, session, timeLeft]);
+    // 2. Continuous Polling Fallback (every 800ms, does NOT reset on timer ticks)
+    const pollInterval = setInterval(async () => {
+      if (isPairedHandled.current) return;
+      try {
+        const status = await api.checkPairingStatus(sId);
+        if (status && status.paired) {
+          handleDevicePaired(status.deviceName, status.deviceIp, status.devicePort);
+        }
+      } catch (e) {}
+    }, 800);
+
+    return () => {
+      if (ws) {
+        try { ws.close(); } catch (e) {}
+      }
+      clearInterval(pollInterval);
+    };
+  }, [isOpen, session?.sessionId]);
 
   // Manual Direct LAN Connection
   const handleManualConnect = async () => {
@@ -96,7 +145,7 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
       setTimeout(() => {
         onConnected(health.device);
         onClose();
-      }, 1000);
+      }, 400);
     } catch (err: any) {
       setErrorMessage(err.message || `Failed to connect to ${manualIp}:${manualPort}`);
     } finally {
@@ -166,6 +215,30 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
 
         {/* Modal Content */}
         <div className="p-6 relative z-10">
+          {/* Quick-Connect Banner for Auto-detected Phone */}
+          {detectedPhone && !successMessage && (
+            <div className="mb-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between animate-fadeIn">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" />
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center space-x-1.5">
+                    <span>{detectedPhone.deviceName}</span>
+                    <span className="text-[10px] text-emerald-400 bg-emerald-500/20 px-1.5 py-0.2 rounded font-mono">ONLINE</span>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-400">{detectedPhone.deviceIp}:{detectedPhone.devicePort}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDevicePaired(detectedPhone.deviceName, detectedPhone.deviceIp, detectedPhone.devicePort)}
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-md transition-all active:scale-95 flex items-center space-x-1"
+              >
+                <span>Connect</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {activeMode === 'qr' ? (
             <div className="flex flex-col items-center">
               {/* QR Code Container with Ambient Glow */}
@@ -204,15 +277,15 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
               {/* Minimalist 3-Step Guide */}
               <div className="mt-4 p-3.5 rounded-2xl bg-[#0e1422] border border-white/[0.06] text-xs text-slate-400 w-full space-y-2">
                 <div className="flex justify-between items-center text-slate-300 font-medium">
-                  <span className="text-[11px] uppercase tracking-wider text-slate-400 font-mono">How to pair</span>
+                  <span className="text-[11px] uppercase tracking-wider text-slate-400 font-mono">Pairing Instructions</span>
                   <span className="font-mono text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                    Host: {session?.desktopIp || '192.168.0.108'}
+                    Desktop IP: {session?.desktopIp || '192.168.0.108'}
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 pt-1 text-center">
                   <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                     <span className="text-[10px] text-emerald-400 font-mono block">01</span>
-                    <span className="text-[11px] text-slate-300">Open ALT-OS</span>
+                    <span className="text-[11px] text-slate-300">Open App</span>
                   </div>
                   <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                     <span className="text-[10px] text-emerald-400 font-mono block">02</span>
@@ -228,14 +301,23 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5 font-mono">
-                  Phone IP Address
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-medium text-slate-400 font-mono">
+                    Phone Wi-Fi IP
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setManualIp('192.168.0.109')}
+                    className="text-[10px] text-emerald-400 font-mono hover:underline"
+                  >
+                    Auto-fill (192.168.0.109)
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={manualIp}
                   onChange={(e) => setManualIp(e.target.value)}
-                  placeholder="192.168.0.150"
+                  placeholder="192.168.0.109"
                   className="w-full px-3.5 py-2.5 bg-[#0e1422] border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">

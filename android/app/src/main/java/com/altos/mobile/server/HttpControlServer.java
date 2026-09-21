@@ -444,6 +444,7 @@ public class HttpControlServer extends NanoWSD {
         resp.addHeader("Access-Control-Allow-Origin", "*");
         resp.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         resp.addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-ALTOS-Token");
+        resp.addHeader("Access-Control-Allow-Private-Network", "true");
         resp.addHeader("Access-Control-Max-Age", "86400");
     }
 

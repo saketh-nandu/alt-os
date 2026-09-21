@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -36,6 +38,8 @@ public class AltOsServerService extends Service {
     private PairingManager pairingManager;
     private HttpControlServer controlServer;
     private RelayClient relayClient;
+    private PowerManager.WakeLock wakeLock;
+    private WifiManager.WifiLock wifiLock;
 
     private int serverPort = 8765;
     private boolean isRunning = false;
@@ -50,6 +54,22 @@ public class AltOsServerService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+
+        // Acquire WakeLock and High-Performance WifiLock to prevent radio sleep
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "altos:server_wakelock");
+                wakeLock.acquire();
+            }
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (wm != null) {
+                wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "altos:wifi_lock");
+                wifiLock.acquire();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not acquire wake/wifi locks: " + e.getMessage());
+        }
 
         runtimeManager = new RuntimeManager(this);
         systemMonitor = new SystemMonitor(this);
@@ -150,6 +170,12 @@ public class AltOsServerService extends Service {
         stopServer();
         if (relayClient != null) {
             relayClient.disconnect();
+        }
+        if (wakeLock != null && wakeLock.isHeld()) {
+            try { wakeLock.release(); } catch (Exception ignored) {}
+        }
+        if (wifiLock != null && wifiLock.isHeld()) {
+            try { wifiLock.release(); } catch (Exception ignored) {}
         }
         super.onDestroy();
     }

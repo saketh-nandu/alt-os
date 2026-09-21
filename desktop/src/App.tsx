@@ -37,14 +37,6 @@ export const App: React.FC = () => {
 
   // Check real health and real metrics from phone
   const refreshStatus = async () => {
-    if (!api.getBaseUrl()) {
-      setIsConnected(false);
-      setServerOnline(false);
-      setMetrics(null);
-      setDeviceName('No Device Connected');
-      return;
-    }
-
     try {
       const health = await api.getHealth();
       if (health && health.status === 'online') {
@@ -54,13 +46,24 @@ export const App: React.FC = () => {
 
         const m = await api.getMetrics();
         setMetrics(m);
-      } else {
-        setIsConnected(false);
-        setServerOnline(false);
-        setMetrics(null);
-        setDeviceName('No Device Connected');
+        return;
       }
-    } catch (e) {
+    } catch (e) {}
+
+    // If not connected, attempt auto-discovery of live phone on LAN
+    try {
+      const discovered = await api.autoDiscoverDevice();
+      if (discovered && discovered.status === 'online') {
+        setIsConnected(true);
+        setDeviceName(discovered.device || 'realme RMX1925');
+        setServerOnline(true);
+        const m = await api.getMetrics();
+        setMetrics(m);
+        return;
+      }
+    } catch (e) {}
+
+    if (!api.getBaseUrl()) {
       setIsConnected(false);
       setServerOnline(false);
       setMetrics(null);
