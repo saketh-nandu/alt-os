@@ -12,6 +12,7 @@ public class PairingManager {
     private long sessionExpiresAt = 0;
     private String pairedClientName = null;
     private boolean isPaired = false;
+    private final SecureRandom secureRandom = new SecureRandom();
 
     public static class PairingPayload {
         public String version;
@@ -25,12 +26,29 @@ public class PairingManager {
         public int desktopPort;
 
         public static PairingPayload fromJson(String jsonStr) throws JSONException {
+            if (jsonStr == null) {
+                throw new JSONException("Pairing payload is null");
+            }
+            jsonStr = jsonStr.trim();
             JSONObject obj = new JSONObject(jsonStr);
             PairingPayload payload = new PairingPayload();
             payload.version = obj.optString("version", "1.0");
-            payload.sessionId = obj.getString("sessionId");
-            payload.token = obj.getString("token");
-            payload.expiresAt = obj.getLong("expiresAt");
+            payload.sessionId = obj.optString("sessionId", obj.optString("id", ""));
+            payload.token = obj.optString("token", obj.optString("authToken", ""));
+
+            // Support long, number, or string representation of expiresAt
+            long exp = 0;
+            if (obj.has("expiresAt")) {
+                Object expVal = obj.get("expiresAt");
+                if (expVal instanceof Number) {
+                    exp = ((Number) expVal).longValue();
+                } else {
+                    try {
+                        exp = Long.parseLong(expVal.toString().trim());
+                    } catch (Exception ignored) {}
+                }
+            }
+            payload.expiresAt = exp;
             payload.localUrl = obj.optString("localUrl", "");
             payload.relayUrl = obj.optString("relayUrl", "");
             payload.announceUrl = obj.optString("announceUrl", "");
@@ -38,11 +56,51 @@ public class PairingManager {
             payload.desktopPort = obj.optInt("desktopPort", 4000);
             return payload;
         }
+
+        public String toJson() {
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put("version", version != null ? version : "1.0");
+                obj.put("sessionId", sessionId != null ? sessionId : "");
+                obj.put("token", token != null ? token : "");
+                obj.put("expiresAt", expiresAt);
+                obj.put("localUrl", localUrl != null ? localUrl : "");
+                obj.put("relayUrl", relayUrl != null ? relayUrl : "");
+                obj.put("announceUrl", announceUrl != null ? announceUrl : "");
+                obj.put("desktopIp", desktopIp != null ? desktopIp : "");
+                obj.put("desktopPort", desktopPort);
+                return obj.toString();
+            } catch (JSONException e) {
+                return "{}";
+            }
+        }
+    }
+
+    public synchronized PairingPayload createLocalSession(long ttlMillis) {
+        PairingPayload payload = new PairingPayload();
+        payload.version = "1.0";
+        payload.sessionId = UUID.randomUUID().toString();
+        byte[] tokenBytes = new byte[24];
+        secureRandom.nextBytes(tokenBytes);
+        StringBuilder sb = new StringBuilder();
+        for (byte b : tokenBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        payload.token = sb.toString();
+        payload.expiresAt = System.currentTimeMillis() + (ttlMillis > 0 ? ttlMillis : (5 * 60 * 1000));
+
+        processPairingPayload(payload, "ALT-OS Host");
+        return payload;
     }
 
     public synchronized boolean processPairingPayload(PairingPayload payload, String clientName) {
+        if (payload == null || payload.sessionId == null || payload.sessionId.isEmpty()) {
+            return false;
+        }
+
         long now = System.currentTimeMillis();
-        if (payload.expiresAt < now) {
+        // If expiresAt is set (> 0), ensure it is not expired
+        if (payload.expiresAt > 0 && payload.expiresAt < now) {
             return false; // Expired token
         }
 
@@ -58,7 +116,7 @@ public class PairingManager {
         if (!isPaired || activeAuthToken == null) {
             return false;
         }
-        if (System.currentTimeMillis() > sessionExpiresAt) {
+        if (sessionExpiresAt > 0 && System.currentTimeMillis() > sessionExpiresAt) {
             disconnect();
             return false;
         }
@@ -74,7 +132,7 @@ public class PairingManager {
     }
 
     public synchronized boolean isPaired() {
-        if (isPaired && System.currentTimeMillis() > sessionExpiresAt) {
+        if (isPaired && sessionExpiresAt > 0 && System.currentTimeMillis() > sessionExpiresAt) {
             disconnect();
             return false;
         }

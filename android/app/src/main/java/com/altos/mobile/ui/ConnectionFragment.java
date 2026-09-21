@@ -158,7 +158,9 @@ public class ConnectionFragment extends Fragment {
     }
 
     private void handleScannedQrPayload(String raw) {
-        if (raw == null || raw.isEmpty()) return;
+        if (raw == null) return;
+        raw = raw.trim();
+        if (raw.isEmpty()) return;
 
         etToken.setText(raw);
         AltOsServerService s = getService();
