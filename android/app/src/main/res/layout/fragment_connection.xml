@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@color/bg_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DEVICE PAIRING &amp; WIRELESS VPN"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Connection Status Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tv_conn_status_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="● DISCONNECTED"
+                    android:textColor="@color/accent_rose"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_pill_rose"
+                    android:paddingStart="12dp"
+                    android:paddingTop="5dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="5dp"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_paired_device_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No computer paired."
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp"/>
+
+            <Button
+                android:id="@+id/btn_disconnect_device"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="@color/accent_rose"
+                android:text="DISCONNECT"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+        <!-- Camera QR Code Scanner Card (Primary Pairing Action) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CAMERA QR CODE PAIRING"
+                android:textColor="@color/accent_emerald"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scan the pairing QR code from the ALT-OS desktop app (Click 'Pair ALT-OS Mobile' in desktop) to instantly connect wirelessly."
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:layout_marginTop="6dp"/>
+
+            <Button
+                android:id="@+id/btn_scan_qr"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="@color/accent_emerald"
+                android:text="📷 SCAN DESKTOP QR CODE"
+                android:textColor="#0B0F19"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+
+            <!-- Manual Token Fallback Accordion / Divider -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="— OR PASTE JSON PAYLOAD MANUALLY —"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"/>
+
+            <EditText
+                android:id="@+id/et_pairing_token"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:background="@drawable/bg_card_rounded"
+                android:hint="Paste QR JSON payload here..."
+                android:textColorHint="@color/text_secondary"
+                android:textColor="@color/text_primary"
+                android:padding="10dp"
+                android:gravity="top|start"
+                android:typeface="monospace"
+                android:textSize="12sp"/>
+
+            <Button
+                android:id="@+id/btn_pair_token"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/accent_indigo"
+                android:text="PAIR MANUALLY"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+        <!-- Wireless VPN / Proxy Gateway Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="WIRELESS VPN / PROXY GATEWAY"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"/>
+
+                <TextView
+                    android:id="@+id/tv_vpn_status_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="● VPN OFFLINE"
+                    android:textColor="@color/accent_rose"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_pill_rose"
+                    android:paddingStart="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="3dp"/>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Route desktop PC or LAN traffic wirelessly through this phone's Internet connection via high-speed SOCKS5 / HTTP CONNECT tunnel."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="6dp"/>
+
+            <TextView
+                android:id="@+id/tv_vpn_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="socks5://127.0.0.1:1080"
+                android:textColor="@color/accent_emerald"
+                android:textSize="15sp"
+                android:typeface="monospace"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_vpn_stats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Traffic: Sent 0 KB | Recv 0 KB"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:typeface="monospace"
+                android:layout_marginTop="4dp"/>
+
+            <Button
+                android:id="@+id/btn_toggle_vpn"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="@color/accent_emerald"
+                android:text="START WIRELESS VPN"
+                android:textColor="#0B0F19"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💡 Connect from Desktop in 'VPN &amp; Network Tunnels' tab, or configure system proxy to this address."
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
+
+        <!-- Direct LAN Connection Info Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DIRECT LAN REST API"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"/>
+
+            <TextView
+                android:id="@+id/tv_lan_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="http://127.0.0.1:8765"
+                android:textColor="@color/accent_emerald"
+                android:textSize="15sp"
+                android:typeface="monospace"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Direct REST control endpoint for apps on the same Wi-Fi network."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

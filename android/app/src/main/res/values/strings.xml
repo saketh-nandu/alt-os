@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ALT-OS</string>
+    <string name="server_online">● SERVER ONLINE</string>
+    <string name="server_offline">● SERVER OFFLINE</string>
+    <string name="pc_connected">● PC CONNECTED</string>
+    <string name="pc_disconnected">● DISCONNECTED</string>
+    <string name="btn_start_server">START SERVER</string>
+    <string name="btn_stop_server">STOP SERVER</string>
+    <string name="btn_restart_server">RESTART SERVER</string>
+</resources>

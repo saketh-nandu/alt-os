@@ -1,0 +1,14 @@
+<resources>
+    <!-- Modern dark palette -->
+    <color name="bg_primary">#0B0F19</color>
+    <color name="bg_card">#111827</color>
+    <color name="bg_card_border">#1F2937</color>
+    <color name="text_primary">#F9FAFB</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="accent_emerald">#10B981</color>
+    <color name="accent_emerald_dim">#064E3B</color>
+    <color name="accent_indigo">#6366F1</color>
+    <color name="accent_indigo_dim">#312E81</color>
+    <color name="accent_rose">#F43F5E</color>
+    <color name="accent_amber">#F59E0B</color>
+</resources>

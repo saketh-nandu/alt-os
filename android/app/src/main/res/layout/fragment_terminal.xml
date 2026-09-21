@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@color/bg_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ALT-OS TERMINAL"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <Button
+            android:id="@+id/btn_term_ctrl_c"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:backgroundTint="@color/accent_rose"
+            android:text="Ctrl+C"
+            android:textSize="12sp"
+            android:layout_marginEnd="6dp"/>
+
+        <Button
+            android:id="@+id/btn_term_clear"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:backgroundTint="@color/bg_card"
+            android:text="Clear"
+            android:textSize="12sp"/>
+    </LinearLayout>
+
+    <!-- Terminal Output View -->
+    <ScrollView
+        android:id="@+id/scroll_terminal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#050811"
+        android:padding="10dp"
+        android:fillViewport="true">
+
+        <TextView
+            android:id="@+id/tv_terminal_output"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:text="ALT-OS Shell ready. Real Linux userspace execution.\nType command or tap a quick action below.\n$ "
+            android:textColor="#34D399"
+            android:textSize="13sp"/>
+    </ScrollView>
+
+    <!-- Quick Shortcuts Row -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/chip_uname"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:backgroundTint="@color/bg_card"
+                android:text="uname -a"
+                android:textSize="11sp"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/chip_ls"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:backgroundTint="@color/bg_card"
+                android:text="ls -la"
+                android:textSize="11sp"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/chip_pwd"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:backgroundTint="@color/bg_card"
+                android:text="pwd"
+                android:textSize="11sp"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/chip_python"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:backgroundTint="@color/bg_card"
+                android:text="python3 -V"
+                android:textSize="11sp"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/chip_df"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:backgroundTint="@color/bg_card"
+                android:text="df -h"
+                android:textSize="11sp"/>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Command Input Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/et_terminal_input"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card_rounded"
+            android:hint="Enter command..."
+            android:textColorHint="@color/text_secondary"
+            android:textColor="@color/text_primary"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="textNoSuggestions"
+            android:imeOptions="actionSend"
+            android:typeface="monospace"
+            android:textSize="14sp"/>
+
+        <Button
+            android:id="@+id/btn_terminal_send"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/accent_emerald"
+            android:text="RUN"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+</LinearLayout>
