@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, QrCode, Globe, ShieldCheck, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, QrCode, Globe, ShieldCheck, RefreshCw, CheckCircle2, AlertCircle, Smartphone, ArrowRight } from 'lucide-react';
 import { PairingSession } from '../types';
 import { api } from '../services/api';
 
@@ -71,14 +71,14 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
           } else {
             api.setConnection(`http://${window.location.hostname || '127.0.0.1'}:4000`, session.token, 'relay', session.sessionId);
           }
-          setSuccessMessage(`✓ Phone Paired: ${devName}`);
+          setSuccessMessage(`✓ Connected: ${devName}`);
           setTimeout(() => {
             onConnected(devName);
             onClose();
-          }, 1200);
+          }, 1000);
         }
       } catch (e) {
-        // Keep waiting for phone
+        // Wait for phone
       }
     }, 1500);
 
@@ -115,120 +115,136 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
   const qrPayloadString = session ? JSON.stringify(session) : '';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="bg-[#0f141f] border border-[#1e2738] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+      <div className="bg-[#0b101a] border border-white/[0.08] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative">
         
+        {/* Subtle Ambient Top Highlight */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 bg-emerald-500/10 blur-3xl pointer-events-none" />
+
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#1e2738] flex items-center justify-between">
+        <div className="px-6 py-5 border-b border-white/[0.06] flex items-center justify-between relative z-10">
           <div>
-            <h3 className="text-base font-bold text-gray-100 flex items-center space-x-2">
+            <h3 className="text-base font-bold text-white flex items-center space-x-2">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              <span>PAIR ALT-OS MOBILE</span>
+              <span>Pair Mobile Device</span>
             </h3>
-            <p className="text-xs text-gray-400 mt-0.5">Real-time mobile connection</p>
+            <p className="text-xs text-slate-400 mt-0.5">Secure peer-to-peer mobile connection</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 p-1.5 rounded-lg hover:bg-[#1a2233] transition-colors"
+            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/[0.06] transition-all"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Tab switch */}
-        <div className="px-6 pt-4 flex space-x-2 border-b border-[#1e2738]/60">
+        {/* Tab Switcher */}
+        <div className="px-6 pt-4 flex space-x-2 border-b border-white/[0.06] relative z-10">
           <button
             onClick={() => setActiveMode('qr')}
-            className={`flex items-center space-x-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 ${
+            className={`flex items-center space-x-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
               activeMode === 'qr'
-                ? 'border-emerald-400 text-emerald-400 bg-emerald-500/5'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'
             }`}
           >
             <QrCode className="w-3.5 h-3.5" />
-            <span>CAMERA QR SCAN</span>
+            <span>Camera QR Scan</span>
           </button>
           <button
             onClick={() => setActiveMode('manual')}
-            className={`flex items-center space-x-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 ${
+            className={`flex items-center space-x-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
               activeMode === 'manual'
-                ? 'border-emerald-400 text-emerald-400 bg-emerald-500/5'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
-            <span>DIRECT LAN IP</span>
+            <span>Direct LAN IP</span>
           </button>
         </div>
 
         {/* Modal Content */}
-        <div className="p-6">
+        <div className="p-6 relative z-10">
           {activeMode === 'qr' ? (
             <div className="flex flex-col items-center">
-              {/* QR Code Container */}
-              <div className="p-4 bg-white rounded-xl shadow-md border border-gray-200">
-                {qrPayloadString ? (
-                  <QRCodeSVG
-                    value={qrPayloadString}
-                    size={200}
-                    level="M"
-                    includeMargin={false}
-                  />
-                ) : (
-                  <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-100 text-gray-400 text-xs">
-                    Generating...
-                  </div>
-                )}
+              {/* QR Code Container with Ambient Glow */}
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/30 to-indigo-500/30 rounded-2xl blur-lg opacity-70 group-hover:opacity-100 transition duration-500" />
+                <div className="relative p-4 bg-white rounded-2xl shadow-xl">
+                  {qrPayloadString ? (
+                    <QRCodeSVG
+                      value={qrPayloadString}
+                      size={200}
+                      level="M"
+                      includeMargin={false}
+                    />
+                  ) : (
+                    <div className="w-[200px] h-[200px] flex items-center justify-center bg-slate-50 text-slate-400 text-xs">
+                      Generating key...
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Countdown & Expiry */}
-              <div className="mt-4 flex items-center justify-between w-full text-xs">
-                <span className="text-gray-400">
-                  Token expires in: <span className="font-mono font-bold text-emerald-400">{formatTime(timeLeft)}</span>
+              {/* Countdown & Refresh */}
+              <div className="mt-4 flex items-center justify-between w-full text-xs font-mono">
+                <span className="text-slate-400">
+                  Token TTL: <span className="font-bold text-emerald-400">{formatTime(timeLeft)}</span>
                 </span>
                 <button
                   onClick={generateNewSession}
-                  className="flex items-center space-x-1 text-gray-400 hover:text-emerald-400 transition-colors"
+                  className="flex items-center space-x-1.5 text-slate-400 hover:text-emerald-400 transition-colors py-1 px-2 rounded-lg hover:bg-white/[0.04]"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Regenerate</span>
+                  <span>Refresh Key</span>
                 </button>
               </div>
 
-              <div className="mt-3 p-3 rounded-lg bg-[#141b29] border border-[#1e2738] text-[11px] text-gray-400 w-full space-y-1.5">
-                <div className="flex justify-between items-center text-gray-300 font-medium">
-                  <span>Instructions:</span>
-                  <span className="font-mono text-emerald-400 text-[10px]">
-                    Desktop IP: {session?.desktopIp || '192.168.0.108'}
+              {/* Minimalist 3-Step Guide */}
+              <div className="mt-4 p-3.5 rounded-2xl bg-[#0e1422] border border-white/[0.06] text-xs text-slate-400 w-full space-y-2">
+                <div className="flex justify-between items-center text-slate-300 font-medium">
+                  <span className="text-[11px] uppercase tracking-wider text-slate-400 font-mono">How to pair</span>
+                  <span className="font-mono text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                    Host: {session?.desktopIp || '192.168.0.108'}
                   </span>
                 </div>
-                <ol className="list-decimal list-inside space-y-0.5 text-gray-400">
-                  <li>Open <strong>ALT-OS</strong> on your phone.</li>
-                  <li>Tap <strong>Connect</strong> tab.</li>
-                  <li>Tap <strong>📷 SCAN DESKTOP QR CODE</strong>.</li>
-                </ol>
+                <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                  <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                    <span className="text-[10px] text-emerald-400 font-mono block">01</span>
+                    <span className="text-[11px] text-slate-300">Open ALT-OS</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                    <span className="text-[10px] text-emerald-400 font-mono block">02</span>
+                    <span className="text-[11px] text-slate-300">Connect Tab</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                    <span className="text-[10px] text-emerald-400 font-mono block">03</span>
+                    <span className="text-[11px] text-slate-300">Scan QR</span>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
-                  Android Phone IP (from phone screen)
+                <label className="block text-xs font-medium text-slate-400 mb-1.5 font-mono">
+                  Phone IP Address
                 </label>
                 <input
                   type="text"
                   value={manualIp}
                   onChange={(e) => setManualIp(e.target.value)}
-                  placeholder="e.g. 192.168.0.150"
-                  className="w-full px-3.5 py-2.5 bg-[#141b29] border border-[#1e2738] rounded-lg text-sm text-gray-100 placeholder-gray-500 font-mono focus:outline-none focus:border-emerald-500/50"
+                  placeholder="192.168.0.150"
+                  className="w-full px-3.5 py-2.5 bg-[#0e1422] border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
-                <p className="text-[11px] text-gray-500 mt-1">
-                  Look under "DIRECT LAN REST API" on your phone's Connect tab.
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Shown under "DIRECT LAN REST API" on your mobile screen.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+                <label className="block text-xs font-medium text-slate-400 mb-1.5 font-mono">
                   Port
                 </label>
                 <input
@@ -236,30 +252,30 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
                   value={manualPort}
                   onChange={(e) => setManualPort(e.target.value)}
                   placeholder="8765"
-                  className="w-full px-3.5 py-2.5 bg-[#141b29] border border-[#1e2738] rounded-lg text-sm text-gray-100 placeholder-gray-500 font-mono focus:outline-none focus:border-emerald-500/50"
+                  className="w-full px-3.5 py-2.5 bg-[#0e1422] border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
               </div>
 
               <button
                 onClick={handleManualConnect}
                 disabled={isConnecting}
-                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all shadow-md shadow-emerald-500/20"
+                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
               >
-                {isConnecting ? 'TESTING REAL CONNECTION...' : 'CONNECT TO PHONE'}
+                {isConnecting ? 'Verifying Phone...' : 'Connect to Mobile'}
               </button>
             </div>
           )}
 
           {/* Feedback messages */}
           {errorMessage && (
-            <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-400 flex items-start space-x-2">
+            <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-400 flex items-start space-x-2 animate-fadeIn">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-400 flex items-start space-x-2">
+            <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-400 flex items-start space-x-2 animate-fadeIn">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{successMessage}</span>
             </div>

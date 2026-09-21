@@ -2,9 +2,32 @@
     <style name="Theme.AltOs" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:windowBackground">@color/bg_primary</item>
         <item name="android:statusBarColor">@color/bg_primary</item>
-        <item name="android:navigationBarColor">@color/bg_primary</item>
+        <item name="android:navigationBarColor">@color/bg_card</item>
+        
         <item name="colorPrimary">@color/accent_emerald</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorOnPrimary">#080B12</item>
         <item name="colorSecondary">@color/accent_indigo</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        
+        <item name="colorSurface">@color/bg_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOutline">@color/bg_card_border</item>
+
+        <!-- Rounded Shape Tokens -->
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.AltOs.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.AltOs.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.AltOs.Large</item>
+    </style>
+
+    <style name="ShapeAppearance.AltOs.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerSize">10dp</item>
+    </style>
+
+    <style name="ShapeAppearance.AltOs.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style name="ShapeAppearance.AltOs.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerSize">18dp</item>
     </style>
 </resources>

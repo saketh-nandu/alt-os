@@ -197,15 +197,15 @@ export const FilesPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto py-8 px-8 space-y-6 animate-fadeIn">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-100 flex items-center space-x-2.5">
+          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center space-x-2.5">
             <Folder className="w-6 h-6 text-amber-400" />
-            <span>ALT-OS File Manager</span>
+            <span>File Explorer</span>
           </h2>
-          <p className="text-xs text-gray-400 mt-0.5 font-mono">
-            Sandboxed Environment Storage (/home, /apps, /server, /storage, /logs)
+          <p className="text-xs text-slate-400 mt-0.5 font-mono">
+            Physical Android Sandbox Storage (/home, /apps, /server, /storage)
           </p>
         </div>
 
@@ -222,16 +222,16 @@ export const FilesPage: React.FC = () => {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all shadow-sm shadow-emerald-600/20 disabled:opacity-50"
-            title="Upload code, scripts, or files from computer to current Android directory"
+            className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50"
+            title="Upload code or files from computer to current Android directory"
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>{isUploading ? 'Uploading...' : 'Upload to Android'}</span>
+            <span>{isUploading ? 'Uploading...' : 'Upload to Phone'}</span>
           </button>
 
           <button
             onClick={() => setShowNewFileModal(true)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#141b29] hover:bg-[#1a2336] border border-[#1e2738] text-gray-200 text-xs font-semibold rounded-lg transition-all"
+            className="flex items-center space-x-1.5 px-3.5 py-2 bg-[#0e1422] hover:bg-[#141b2c] border border-white/[0.08] text-slate-200 text-xs font-medium rounded-xl transition-all"
           >
             <Plus className="w-3.5 h-3.5 text-emerald-400" />
             <span>New File</span>
@@ -239,7 +239,7 @@ export const FilesPage: React.FC = () => {
 
           <button
             onClick={() => setShowNewFolderModal(true)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#141b29] hover:bg-[#1a2336] border border-[#1e2738] text-gray-200 text-xs font-semibold rounded-lg transition-all"
+            className="flex items-center space-x-1.5 px-3.5 py-2 bg-[#0e1422] hover:bg-[#141b2c] border border-white/[0.08] text-slate-200 text-xs font-medium rounded-xl transition-all"
           >
             <FolderPlus className="w-3.5 h-3.5 text-indigo-400" />
             <span>New Folder</span>
@@ -247,7 +247,7 @@ export const FilesPage: React.FC = () => {
 
           <button
             onClick={() => loadDirectory(currentPath)}
-            className="p-1.5 bg-[#141b29] hover:bg-[#1a2336] border border-[#1e2738] text-gray-400 hover:text-gray-200 rounded-lg transition-all"
+            className="p-2 bg-[#0e1422] hover:bg-[#141b2c] border border-white/[0.08] text-slate-400 hover:text-white rounded-xl transition-all"
           >
             <RefreshCw className="w-4 h-4" />
           </button>

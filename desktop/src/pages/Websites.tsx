@@ -486,17 +486,17 @@ export const WebsitesPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-8 space-y-8">
+    <div className="max-w-7xl mx-auto py-8 px-8 space-y-8 animate-fadeIn">
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-3">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-100">Website Hosting Studio</h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold font-mono">
-              Android Web Server
+            <h2 className="text-2xl font-bold tracking-tight text-white">Website Studio</h2>
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold font-mono">
+              Mobile Micro-Server
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1 font-mono">
+          <p className="text-xs text-slate-400 mt-1 font-mono">
             Upload code from desktop to Android phone storage &amp; host live websites directly on mobile hardware
           </p>
         </div>
@@ -507,10 +507,10 @@ export const WebsitesPage: React.FC = () => {
               setDeployTab('upload');
               setIsDeployingModal(true);
             }}
-            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20"
+            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-indigo-600/20"
           >
             <Upload className="w-4 h-4" />
-            <span>UPLOAD CODE &amp; HOST</span>
+            <span>Upload Code &amp; Host</span>
           </button>
 
           <button
@@ -518,31 +518,31 @@ export const WebsitesPage: React.FC = () => {
               setDeployTab('template');
               setIsDeployingModal(true);
             }}
-            className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-[#090d16] text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+            className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
           >
             <Plus className="w-4 h-4" />
-            <span>NEW FROM TEMPLATE</span>
+            <span>New from Template</span>
           </button>
         </div>
       </div>
 
       {/* Active Websites Selector & Host URL Banner */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {websites.map((site) => {
           const isSelected = site.id === selectedSiteId;
           return (
             <div
               key={site.id}
               onClick={() => setSelectedSiteId(site.id)}
-              className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
+              className={`p-5 rounded-3xl border transition-all cursor-pointer relative overflow-hidden ${
                 isSelected 
-                  ? 'bg-[#101726] border-emerald-500/40 shadow-lg shadow-emerald-500/5 ring-1 ring-emerald-500/20' 
-                  : 'bg-[#0e131d] border-[#1a2333] hover:border-[#27354d]'
+                  ? 'bg-[#0f1524] border-emerald-500/40 shadow-xl shadow-emerald-500/5 ring-1 ring-emerald-500/20' 
+                  : 'bg-[#0c101a] border-white/[0.06] hover:border-white/[0.12]'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base ${
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base ${
                     site.isRunning 
                       ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                       : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
@@ -550,25 +550,24 @@ export const WebsitesPage: React.FC = () => {
                     <Globe className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-gray-100">{site.name}</h4>
-                    <p className="text-[11px] text-gray-400 font-mono">Port {site.port}</p>
+                    <h4 className="font-bold text-sm text-white">{site.name}</h4>
+                    <p className="text-[11px] text-slate-400 font-mono">Port {site.port}</p>
                   </div>
                 </div>
 
-                <span className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                <span className={`inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold font-mono ${
                   site.isRunning 
-                    ? 'bg-emerald-500/10 text-emerald-400' 
-                    : 'bg-rose-500/10 text-rose-400'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${site.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}></span>
-                  <span>{site.isRunning ? 'Live on Phone' : 'Stopped'}</span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${site.isRunning ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                  <span>{site.isRunning ? 'RUNNING' : 'STOPPED'}</span>
                 </span>
               </div>
 
-              {/* Host URL Display */}
-              <div className="mt-4 pt-3 border-t border-[#182030] flex items-center justify-between text-xs font-mono">
+              <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between text-xs font-mono">
                 <div className="truncate text-emerald-400 font-semibold">{site.hostUrl}</div>
-                <div className="flex items-center space-x-1 text-gray-400">
+                <div className="flex items-center space-x-1 text-slate-400">
                   <Activity className="w-3 h-3 text-cyan-400" />
                   <span>{site.requestsCount || 0} reqs</span>
                 </div>
@@ -580,7 +579,7 @@ export const WebsitesPage: React.FC = () => {
 
       {/* Main Studio Workspace: Live Host URL, Controls, In-App Preview Frame / Code Editor */}
       {activeSite && (
-        <div className="rounded-2xl bg-[#0e131d] border border-[#1a2333] overflow-hidden shadow-xl">
+        <div className="rounded-3xl bg-[#0c101a] border border-white/[0.06] overflow-hidden shadow-2xl">
           {/* Studio Control Header */}
           <div className="px-6 py-4 border-b border-[#182030] flex flex-wrap items-center justify-between gap-4 bg-[#0a0e17]">
             {/* Host URL Link Box */}
